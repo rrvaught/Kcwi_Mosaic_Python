@@ -9,7 +9,10 @@ def ster2pix(fname,which):
     import astropy.io.fits as fits
     hdu=fits.open(fname)
     header=hdu[0].header
-    sqrarc_pix = header['PXSCL'] * header['SLSCL'] * 3600.0 ** 2
+    try:
+        sqrarc_pix = header['PXSCL'] * header['SLSCL'] * 3600.0 ** 2
+    except:
+        sqrarc_pix = header['CDELT1'] * header['CDELT1'] * 3600.0 ** 2
     ster_to_sqrarc=4.255e10
     convfac=sqrarc_pix / ster_to_sqrarc
 

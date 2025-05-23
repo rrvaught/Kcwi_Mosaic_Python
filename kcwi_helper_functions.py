@@ -1,12 +1,25 @@
 def make_dir(path):
-	import os
-	try:
-		os.mkdir(path)
-	except OSError:
-		print('Directory {0} already created'.format(path))
-	else:
-		print('Directory {0} was created'.format(path))
-	return
+    import os
+    try:
+        os.mkdir(path)
+    except OSError:
+        print('Directory {0} already created'.format(path))
+    return
+
+def make_directories(working_dir):
+    make_dir(working_dir + '/working_directory/scubes/raw')
+    make_dir(working_dir + '/working_directory/scubes/projected')
+    make_dir(working_dir + '/working_directory/scubes/final')
+    make_dir(working_dir + '/working_directory/scubes/aligned')
+    make_dir(working_dir + '/working_directory/scubes/final_project')
+
+    make_dir(working_dir + '/working_directory/vcubes/raw')
+    make_dir(working_dir + '/working_directory/vcubes/projected')
+    make_dir(working_dir + '/working_directory/vcubes/final')
+    make_dir(working_dir + '/working_directory/vcubes/aligned')
+    make_dir(working_dir + '/working_directory/vcubes/final_project')
+
+    return
 
 def unpack_raw_cubes(list_of_files,rawdir):
     import numpy as np
@@ -166,4 +179,56 @@ def cosmic_ray_reject(pairs, raw_dir,out_dir):
         f1_hud.writeto(f1_out, overwrite=True)
         f2_hud.writeto(f2_out, overwrite=True)
 
+    return
+
+def make_head_2d(head):
+    nhead=head.copy()
+    try:
+        nhead['NAXIS'] = 2
+        nhead.remove('NAXIS3')
+        nhead.remove('CDELT3')
+        nhead.remove('CRVAL3')
+        nhead.remove('CRPIX3')
+        nhead.remove('CD3_3')
+        return nhead
+    except:
+        return nhead
+
+
+def WcsUpdate(f1, sx, sy, sr, raw_dir):
+    import astropy.io.fits as fits
+    import numpy
+    def pathleaf(path):
+        import ntpath
+        head, tail = ntpath.split(path)
+        return tail or ntpath.basename(head)
+    hdu = fits.open(f1)
+    name = pathleaf(f1)
+    vhdu = fits.open(raw_dir+'/working_directory/vcubes/projected/'+ name[:-17]+'vcubes.vtrims.fits')
+
+    hdu[0].header['CRVAL1'] = hdu[0].header['CRVAL1'] - sx / numpy.cos(numpy.radians(hdu[0].header['CRVAL2']))
+    hdu[0].header['CRVAL2'] = hdu[0].header['CRVAL2'] + sy
+    hdu[0].header['CROTA2'] = hdu[0].header['CROTA2'] - sr
+
+    vhdu[0].header['CRVAL1'] = hdu[0].header['CRVAL1']
+    vhdu[0].header['CRVAL2'] = hdu[0].header['CRVAL2']
+    vhdu[0].header['CROTA2'] = hdu[0].header['CROTA2']
+
+    try:
+        hdu['dec_off'] = sy
+        hdu['ra_off'] = sx
+        hdu['rot_off'] = sr
+    except:
+        print('No Offsets Stored')
+    out_dir=raw_dir+'/working_directory/scubes/aligned'
+    vout_dir = raw_dir + '/working_directory/vcubes/aligned'
+    new_name = out_dir + '/' + name[:-5] + '.fits'
+    vnew_name = vout_dir + '/' + name[:-17] + 'vcubes.fits'
+
+    hdu.writeto(new_name, overwrite=True, output_verify='ignore')
+    hdu.close()
+
+    vhdu.writeto(vnew_name, overwrite=True, output_verify='ignore')
+    vhdu.close()
+    print('The file has been aligned and saved as, ' + new_name)
     return
