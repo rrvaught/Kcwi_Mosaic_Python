@@ -232,3 +232,14 @@ def WcsUpdate(f1, sx, sy, sr, raw_dir):
     vhdu.close()
     print('The file has been aligned and saved as, ' + new_name)
     return
+
+def check_cdelta(old_cube, new_cube):
+    import astropy.io.fits as fits
+    new=fits.open(new_cube)
+    new = fits.open(old_cube)
+	new[0].header['CRVAL3']=old[0].header['CRVAL3']
+	new[0].header['CDELT3']=old[0].header['CDELT3']
+	new[0].header['CRPIX3']=1.0
+	new.writeto(new_cube, overwrite=True)
+	new.close()
+    return

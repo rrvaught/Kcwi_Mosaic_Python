@@ -10,6 +10,7 @@ def repro(directory,out_directory,is_var=False):
     from kcwi_trim import ster2pix
     import glob
     import os
+    from kcwi_helper_functions import check_cdelta
 
     # Read in Images
     tname = glob.glob(directory+'*.fits')
@@ -27,14 +28,12 @@ def repro(directory,out_directory,is_var=False):
         scale=ster2pix(name,'sqrarc2ster')
         file_name, _ = path_leaf(name)
 
-    #    if os.path.exists('projected/' + name) == False:
-    #        os.system('mProjectCube -x ' + str((pfact ** 2) / (
-    #            4.255e10)) + ' trimmed_nanned/' + name + ' projected/' + name + ' first.hdr')  # units of erg/s/cm/A/pix
-        # os.system('mProjectCube trimmed_nanned/'+name+' projected/'+name+' first.hdr')
 
         rtn = mProjectCube(name,
                        out_directory+file_name,
                        out_directory+'first.hdr',fluxScale=scale)
+    # ensure crpix3 and cdelt3 have been copied
+    check_cdelta(name, out_directory+file_name)
     # clean area files
     files = glob.glob(out_directory+'*_area.fits')
     for f in files:

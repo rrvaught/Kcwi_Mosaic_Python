@@ -1,9 +1,4 @@
 import os
-import sys
-import shutil
-
-from MontagePy.main    import *
-from MontagePy.archive import *
 from kcwi_trim import *
 from kcwi_coadd import coadd
 from kcwi_align import align
@@ -12,7 +7,7 @@ from kcwi_helper_functions import *
 import glob
 
 # Input Information
-obj_name='j0823_p2806'
+obj_name='J0823_p2806'
 rawdir='/Users/rrickardsvaught/Library/CloudStorage/Box-Box/JWST MIRI projects/Keck/220127/J0823_p2806'
 side='blue' # or 'red'
 fnames=glob.glob(rawdir+'/*icubes.fits')
@@ -43,7 +38,6 @@ if do_trim:
     snames=glob.glob(rawdir+'/working_directory/scubes/*icubes.fits')
     print(snames)
     for name in snames:
-        print(name)
         trim(name)
 
     vnames = glob.glob(rawdir+'/working_directory/vcubes/*vcubes.fits')
@@ -72,11 +66,11 @@ if do_align:
     directory = rawdir + '/working_directory/scubes/aligned/'
     out_directory = rawdir + '/working_directory/scubes/final_project/'
     repro(directory, out_directory)
+    clean_overlap(out_directory)
 
     directory = rawdir + '/working_directory/vcubes/aligned/'
     out_directory = rawdir + '/working_directory/vcubes/final_project/'
     repro(directory, out_directory)
-    clean_overlap(out_directory)
 
     #### Co-Add Cubes ####
     directory = rawdir + '/working_directory/scubes/final_project/'

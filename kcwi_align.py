@@ -91,7 +91,7 @@ def align_ri(list_of_images,ref_image,filter, directory):
         n_anchhead['NAXIS2'] = np.shape(cutout.data)[0]
         print(n_anchhead)
 
-        sx, sy, sr = calc_offsets(cutout.data, n_anchhead, filt_image, datahdr,8)
+        sx, sy, sr = calc_offsets(cutout.data, n_anchhead, filt_image, datahdr,8.5)
         WcsUpdate(image, sx, sy, sr, directory)
 
     return
