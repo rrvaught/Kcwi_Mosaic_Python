@@ -1,8 +1,3 @@
-import numpy as np
-
-from kcwi_repro import repro
-
-
 def align_sf(list_of_images,directory):
     from kcwi_helper_functions import make_head_2d
     from kcwi_helper_functions import WcsUpdate
@@ -13,13 +8,19 @@ def align_sf(list_of_images,directory):
 
     anchor = list_of_images[0]
     anchdata = np.nansum(fits.open(anchor)[0].data[1000:,:,:], axis=0)
-    plt.imshow(anchdata)
-    plt.show()
-    anchhdr = make_head_2d(fits.open(anchor)[0].header)
+
+    header3d=fits.open(anchor)[0].header
+    anchhdr = make_head_2d(header3d)
     for image in list_of_images[1:]:
-        data = np.nansum(fits.open(image)[0].data[1000:,:,:], axis=0)
-        datahdr = make_head_2d(fits.open(image)[0].header)
-        sx, sy, sr= calc_offsets(anchdata, anchhdr, data, datahdr, 1.5)
+        imhdu=fits.open(image)
+        imdata=imhdu[0].data[1000:,:,:]
+        datahdr3d = imhdu[0].header
+        imhdu.close()
+
+        data = np.nansum(imdata, axis=0)
+        datahdr = make_head_2d(datahdr3d)
+
+        sx, sy, sr= calc_offsets(anchdata, anchhdr, data, datahdr, 2.5)
         WcsUpdate(image, sx, sy, sr, directory)
     return
 
@@ -42,10 +43,14 @@ def align_ri(list_of_images,ref_image,filter, directory):
     from reproject import reproject_interp
 
     # ensure ref image is north aligned
-    wcs_out, shape_out = find_optimal_celestial_wcs((fits.open(ref_image)[0].data,fits.open(ref_image)[0].header))
-    anchor, footprint = reproject_interp((fits.open(ref_image)[0].data,fits.open(ref_image)[0].header),
+    try:
+        wcs_out, shape_out = find_optimal_celestial_wcs((fits.open(ref_image)[0].data,fits.open(ref_image)[0].header))
+        anchor, footprint = reproject_interp((fits.open(ref_image)[0].data,fits.open(ref_image)[0].header),
                                            wcs_out, shape_out=shape_out)
-
+    except:
+        wcs_out, shape_out = find_optimal_celestial_wcs((fits.open(ref_image)[1].data, fits.open(ref_image)[1].header))
+        anchor, footprint = reproject_interp((fits.open(ref_image)[1].data, fits.open(ref_image)[1].header),
+                                             wcs_out, shape_out=shape_out)
     anchorhdr = wcs_out.to_header()
 
     filter_name = '/Users/rrickardsvaught/PycharmProjects/Kcwi_Mosaic_Python/Data/transmission_curves/'+filter
@@ -89,9 +94,8 @@ def align_ri(list_of_images,ref_image,filter, directory):
         n_anchhead['NAXIS'] = 2
         n_anchhead['NAXIS1'] = np.shape(cutout.data)[1]
         n_anchhead['NAXIS2'] = np.shape(cutout.data)[0]
-        print(n_anchhead)
 
-        sx, sy, sr = calc_offsets(cutout.data, n_anchhead, filt_image, datahdr,8.5)
+        sx, sy, sr = calc_offsets(cutout.data, n_anchhead, filt_image, datahdr,0.5)
         WcsUpdate(image, sx, sy, sr, directory)
 
     return

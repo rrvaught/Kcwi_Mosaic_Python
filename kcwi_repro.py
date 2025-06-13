@@ -3,7 +3,7 @@ def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail , head
 
-def repro(directory,out_directory,is_var=False):
+def repro(directory,out_directory):
     from MontagePy.main import mImgtbl
     from MontagePy.main import mMakeHdr
     from MontagePy.main import mProjectCube
@@ -25,15 +25,17 @@ def repro(directory,out_directory,is_var=False):
     # Project KCWI image to Square Pixels via Montage
     for name in tname:
         print('Projecting {0}'.format(name))
-        scale=ster2pix(name,'sqrarc2ster')
-        file_name, _ = path_leaf(name)
+        _=ster2pix(name,'sqrarc2ster')
 
+        file_name, _ = path_leaf(name)
 
         rtn = mProjectCube(name,
                        out_directory+file_name,
-                       out_directory+'first.hdr',fluxScale=scale)
-    # ensure crpix3 and cdelt3 have been copied
-    check_cdelta(name, out_directory+file_name)
+                       out_directory+'first.hdr')#,fluxScale=scale)
+        # ensure crpix3 and cdelt3 have been copied
+
+        _ = ster2pix(out_directory+file_name, 'ster2sqrarc')
+        check_cdelta(name, out_directory+file_name)
     # clean area files
     files = glob.glob(out_directory+'*_area.fits')
     for f in files:

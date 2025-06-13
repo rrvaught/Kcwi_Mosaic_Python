@@ -13,16 +13,22 @@ def ster2pix(fname,which):
         sqrarc_pix = header['PXSCL'] * header['SLSCL'] * 3600.0 ** 2
     except:
         sqrarc_pix = header['CDELT1'] * header['CDELT1'] * 3600.0 ** 2
-    ster_to_sqrarc=4.255e10
-    convfac=sqrarc_pix / ster_to_sqrarc
+
+    ster_to_sqrarc = 4.255e10
+    convfac= sqrarc_pix / ster_to_sqrarc
 
     if which=='sqrarc2ster':
         hdu[0].data=hdu[0].data / convfac
+        hdu.writeto(fname, overwrite=True)
+        hdu.close()
+        return convfac
     elif which=='ster2sqrarc':
         hdu[0].data = hdu[0].data * convfac
-    hdu.writeto(fname,overwrite=True)
-    hdu.close()
-    return convfac
+        hdu.writeto(fname, overwrite=True)
+        hdu.close()
+        return 1./convfac # returns inverse to scal back to flux per pix
+
+
 
 def make_wave(header, z=0):
     import numpy as np
@@ -58,8 +64,7 @@ def trim(fname,is_var=False):
     header=hdu[0].header
     new_header=header.copy()
     data = hdu[0].data
-    header.rename_keyword('CD3_3','CDELT3', force = False)
-    # Montage likes CDELT3 Keyword
+
     wave=make_wave(header)
 
     # Trim Wavelength
@@ -72,7 +77,9 @@ def trim(fname,is_var=False):
 
     new_header['NAXIS2'],new_header['NAXIS1']=np.shape(new_data)[1:]
     new_header['CRVAL3']=wave[gwave][0]
-    new_header['CDELT3'] = header['CDELT3']
+    # Montage likes CDELT3 Keyword
+    new_header['CDELT3'] = header['CD3_3']
+    new_header['CRPIX3'] = header['CRPIX3']
 
     tag='.trims.fits' if not is_var else '.vtrims.fits'
     out_fits=fits.HDUList([fits.PrimaryHDU(data=new_data,header=new_header)])

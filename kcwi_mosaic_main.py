@@ -7,8 +7,9 @@ from kcwi_helper_functions import *
 import glob
 
 # Input Information
-obj_name='J0823_p2806'
-rawdir='/Users/rrickardsvaught/Library/CloudStorage/Box-Box/JWST MIRI projects/Keck/220127/J0823_p2806'
+obj_name='leop_bm4500_test3'
+rawdir='/Users/rrickardsvaught/Desktop/Data/KCWI/leop/bm4500'
+
 side='blue' # or 'red'
 fnames=glob.glob(rawdir+'/*icubes.fits')
 
@@ -16,8 +17,8 @@ fnames=glob.glob(rawdir+'/*icubes.fits')
 do_trim=1  # 1=on, 0 is off
 do_repro=1 # 1=on, 0 is off
 do_align=1 # 1=on, 0 is off
-align_type='reference-image' # options single-field, pairs, reference-image
-ref_image=rawdir+'/J0823_p2806_g.fits'
+align_type='single-field' # options single-field, pairs, reference-image
+ref_image='/Users/rrickardsvaught/Desktop/Data/KCWI/leop/leop_g.fits'
 filter='SLOAN_SDSS.g.dat'
 
 clean_dir=0 # Delete all intermediate files

@@ -190,6 +190,7 @@ def make_head_2d(head):
         nhead.remove('CRVAL3')
         nhead.remove('CRPIX3')
         nhead.remove('CD3_3')
+        nhead.remove('Test')
         return nhead
     except:
         return nhead
@@ -237,9 +238,13 @@ def check_cdelta(old_cube, new_cube):
     import astropy.io.fits as fits
     new=fits.open(new_cube)
     old = fits.open(old_cube)
+    new[0].header['NAXIS']=3
     new[0].header['CRVAL3']=old[0].header['CRVAL3']
     new[0].header['CDELT3']=old[0].header['CDELT3']
     new[0].header['CRPIX3']=old[0].header['CRPIX3']
+    new[0].header['NAXIS3'] = old[0].header['NAXIS3']
+    new[0].header['Test']='Test'
     new.writeto(new_cube, overwrite=True)
     new.close()
+    old.close()
     return

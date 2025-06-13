@@ -59,42 +59,82 @@ def calc_offsets(aimg, ahdr, img, hdr, box_length):
     # Initilaize grid search parameters #
     degperpix = abs(proj_plane_pixel_scales(awcs)[0])
     arcperpix = degperpix * 3600
-    print(arcperpix)
 
-    npix = round(box_length / arcperpix)
-    stepr = 0.5
-    step = 1.0
-    gx = 0
-    gy = 0
-    tryx = np.arange(-npix + gx, gx + npix + 1, step)
-    tryy = np.arange(-npix + gy, gy + npix + 1, step)
-    tryr = np.arange(-1, 1 + stepr, stepr)
+    attempt=0
 
-    match = 0.0
-    bestx, besty, bestr, test = 0, 0, 0, 0
+    while attempt < 2:
+        if attempt==0:
+            npix = round(box_length / arcperpix)
+            stepr = 0.5
+            step = 2.0
+            gx = -11.0
+            gy = 3.0
+            tryx = np.arange(-npix + gx, gx + npix + 1, step)
+            tryy = np.arange(-npix + gy, gy + npix + 1, step)
+            tryr = np.arange(-1, 1 + stepr, stepr)
 
-    i = 0
+            match = 0.0
+            bestx, besty, bestr, test = 0, 0, 0, 0
 
-    import itertools
-    for x in itertools.product(tryx, tryy, tryr):
-        im = rotate(shift(array, [x[1], x[0]], order=0, cval=-10), x[2], reshape=False)
-        test = abs(correl_mismatch(im, aimg))
+            i = 0
 
-        if np.isfinite(test) == False:
-            test = 0
-        while i == 0:
-            print('Initial Correlation = ', test)
-            match = test
-            i = 1
-        if test > match:
-            bestx = x[0]
-            besty = x[1]
-            bestr = x[2]
-            print('Updating best shift parameters to:')
-            print(bestx, besty, bestr, abs(test))
-            match = abs(test)
+            import itertools
+            for x in itertools.product(tryx, tryy, tryr):
+                im = rotate(shift(array, [x[1], x[0]], order=0, cval=-10), x[2], reshape=False)
+                test = abs(correl_mismatch(im, aimg))
+
+                if np.isfinite(test) == False:
+                    test = 0
+                while i == 0:
+                    print('Initial Correlation = ', test)
+                    match = test
+                    i = 1
+                if test > match:
+                    bestx = x[0]
+                    besty = x[1]
+                    bestr = x[2]
+                    print('First pass parameters updated to:')
+                    print(' bestx =',bestx,' besty =', besty, ' rot =',bestr, ' Corr =',abs(test))
+                    match = abs(test)
+                else:
+                    continue
+            attempt += 1
+
         else:
-            continue
+            npix = round(0.4/ arcperpix)
+            stepr = 0.5
+            step = 1.0
+            gx = bestx
+            gy = besty
+            tryx = np.arange(-npix + gx, gx + npix + 1, step)
+            tryy = np.arange(-npix + gy, gy + npix + 1, step)
+            tryr = np.arange(-1, 1 + stepr, stepr)
+
+            bestx, besty, bestr, test = 0, 0, 0, match
+
+            i = 0
+
+            import itertools
+            for x in itertools.product(tryx, tryy, tryr):
+                im = rotate(shift(array, [x[1], x[0]], order=0, cval=-10), x[2], reshape=False)
+                test = abs(correl_mismatch(im, aimg))
+
+                if np.isfinite(test) == False:
+                    test = 0
+                while i == 0:
+                    print('Initial Correlation = ', test)
+                    match = test
+                    i = 1
+                if test > match:
+                    bestx = x[0]
+                    besty = x[1]
+                    bestr = x[2]
+                    print('Updating best shift parameters to:')
+                    print(' bestx =', bestx, ' besty =', besty, ' rot =', bestr, ' Corr =', abs(test))
+                    match = abs(test)
+                else:
+                    continue
+            attempt += 1
 
     shift_x = degperpix * bestx
     shift_y = degperpix * besty
